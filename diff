@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>¿Qué personaje de Sonic eres?</title>
+<style>
+  body{font-family:Arial, Helvetica, sans-serif;margin:0;background:#0f172a;color:white}
+  header{text-align:center;padding:30px 10px}
+  h1{margin:0}
+  .container{max-width:1000px;margin:auto;padding:20px}
+  .card{background:#1e293b;padding:20px;border-radius:14px;margin-bottom:20px;box-shadow:0 10px 25px rgba(0,0,0,.3)}
+  button{background:#3b82f6;border:none;padding:10px 15px;border-radius:8px;color:white;cursor:pointer;margin:8px 6px}
+  button:hover{opacity:.9}
+  .hidden{display:none}
+  img{max-width:260px;border-radius:12px;margin-top:15px}
+  .answers button{display:block;width:100%;text-align:left}
+  .top-select{text-align:center;margin-bottom:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧩 ¿Qué personaje de Sonic eres?</h1>
+  <p>Basado en tu personalidad – Solo personajes de los juegos</p>
+</header>
+
+<div class="container">
+
+  <div class="card" id="start">
+    <h2>Elige categoría</h2>
+    <div class="top-select">
+      <button onclick="startTest('male')">Personajes Masculinos</button>
+      <button onclick="startTest('female')">Personajes Femeninos</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="quiz">
+    <h2 id="question"></h2>
+    <div id="answers" class="answers"></div>
+  </div>
+
+  <div class="card hidden" id="result">
+    <h2 id="characterName"></h2>
+    <p id="justification"></p>
+    <img id="characterImg" src="" alt="personaje" />
+    <br>
+    <button onclick="location.reload()">Volver a empezar</button>
+  </div>
+
+</div>
+
+<script>
+let currentQuestion = 0;
+let answers = [];
+let mode = '';
+
+const questions = [
+  {q:`Te dan una misión peligrosa. Tú…`,a:["A) Me lanzo primero, luego veo qué pasa.","B) Analizo el plan antes de moverme.","C) Pregunto quién más va a ir.","D) Solo voy si sé que vale la pena."]},
+  {q:`Cuando algo sale mal, tú sueles…`,a:["A) Bromear para quitar tensión.","B) Quedarte callado pensando en la solución.","C) Preocuparte por cómo están los demás.","D) Enojarte porque pudo hacerse mejor."]},
+  {q:`En tu grupo de amigos eres el que…`,a:["A) Hace reír a todos.","B) Da los consejos más sensatos.","C) Escucha a todos.","D) Motiva a todos a hacer cosas."]},
+  {q:`Tu peor defecto es…`,a:["A) Impulsivo.","B) Sobrepensar.","C) Cargar con problemas ajenos.","D) Orgulloso."]},
+  {q:`Si alguien se mete con un amigo tuyo…`,a:["A) Voy directo sin pensar.","B) Busco una forma inteligente de arreglarlo.","C) Intento calmar la situación.","D) Lo confronto con firmeza."]},
+  {q:`¿Qué valoras más?`,a:["A) Libertad.","B) Lealtad.","C) Paz.","D) Propósito."]},
+  {q:`En el amor tú eres más de…`,a:["A) Detalles espontáneos.","B) Seguridad y estabilidad.","C) Comprensión y apoyo.","D) Compromiso fuerte y protector."]},
+  {q:`Cuando estás bajo presión…`,a:["A) Improviso.","B) Me concentro en resolver.","C) Me afecta emocionalmente.","D) Me vuelvo más serio y determinado."]},
+  {q:`¿Qué te molesta más?`,a:["A) Que me digan qué hacer.","B) La gente irresponsable.","C) Los conflictos innecesarios.","D) La injusticia."]},
+  {q:`Si fueras líder sería un líder que…`,a:["A) Inspira con energía.","B) Organiza con inteligencia.","C) Cuida al equipo.","D) Marca el camino con carácter."]},
+  {q:`¿Cómo tomas decisiones importantes?`,a:["A) Por instinto.","B) Con lógica.","C) Pensando en cómo afecta a otros.","D) Según mis principios."]},
+  {q:`¿Qué frase sientes más tuya?`,a:["A) “La vida es una aventura.”","B) “Todo tiene solución si lo piensas.”","C) “No quiero que nadie salga herido.”","D) “Haré lo correcto aunque cueste.”"]}
+];
+
+// Pesos por letra
+function tally(){
+  const count = {A:0,B:0,C:0,D:0};
+  answers.forEach(i=>{count[['A','B','C','D'][i]]++});
+  return count;
+}
+
+const maleMap = {
+  Sonic:{letters:['A'],img:'https://i.imgur.com/ssezFQR.png',just:`Eres impulsivo, libre y energético. Actúas primero y confías en tu instinto.`},
+  Tails:{letters:['B'],img:'https://i.imgur.com/m2PbnEA.png',just:`Tu mente analítica y tu lógica te definen. Piensas antes de actuar.`},
+  Knuckles:{letters:['D'],img:'https://i.imgur.com/W9W087W.png',just:`Firme, protector y guiado por tus principios. Tu carácter es tu sello.`},
+  Shadow:{letters:['D','B'],img:'https://i.imgur.com/EUBlfeN.png',just:`Serio, determinado y profundo. No hablas mucho, pero actúas con propósito.`},
+  Silver:{letters:['C','B'],img:'https://i.imgur.com/aC8150q.png',just:`Empático y reflexivo. Te importa el bienestar de todos.`},
+  Jet:{letters:['A','D'],img:'https://i.imgur.com/KVEg5wY.png',just:`Competitivo, orgulloso y lleno de energía. Te gusta destacar.`},
+  Eggman:{letters:['B','D'],img:'https://i.imgur.com/1ce3M9X.png',just:`Estratega, inteligente y siempre pensando varios pasos adelante.`},
+  Vector:{letters:['C','A'],img:'https://i.imgur.com/M2fUk7q.png',just:`Carismático, ruidoso y protector con los tuyos.`},
+  Espio:{letters:['B','C'],img:'https://i.imgur.com/cKASZOy.png',just:`Silencioso, analítico y muy observador.`},
+  Big:{letters:['C'],img:'https://i.imgur.com/QIWNa7i.png',just:`Pacífico, noble y de buen corazón. Evitas conflictos.`}
+};
+
+const femaleMap = {
+  Amy:{letters:['A'],img:'https://i.imgur.com/CLf6fJo.png',just:`Emocional, apasionada y muy expresiva con lo que sientes.`},
+  Cream:{letters:['C'],img:'https://i.imgur.com/CyYDpVl.png',just:`Dulce, empática y siempre preocupada por los demás.`},
+  Rouge:{letters:['D','A'],img:'https://i.imgur.com/9kZnIlK.png',just:`Segura, directa y con mucha personalidad.`},
+  Blaze:{letters:['D','B'],img:'https://i.imgur.com/2cb0XAm.png',just:`Reservada, firme y guiada por tus principios.`},
+  Wave:{letters:['B'],img:'https://i.imgur.com/OfKW0Yw.png',just:`Analítica, estratégica y muy inteligente.`},
+  Tikal:{letters:['C','D'],img:'https://i.imgur.com/db4GhTd.png',just:`Espiritual, pacífica y con un fuerte sentido del deber.`},
+  Sticks:{letters:['A','C'],img:'https://i.imgur.com/ODLzDHL.png',just:`Impulsiva, auténtica y muy leal a los tuyos.`}
+};
+
+function startTest(selectedMode){
+  mode = selectedMode;
+  document.getElementById('start').classList.add('hidden');
+  document.getElementById('quiz').classList.remove('hidden');
+  showQuestion();
+}
+
+function showQuestion(){
+  if(currentQuestion >= questions.length){showResult();return;}
+  const q = questions[currentQuestion];
+  document.getElementById('question').innerText = `${currentQuestion+1}. ${q.q}`;
+  const ansDiv = document.getElementById('answers');
+  ansDiv.innerHTML = '';
+  q.a.forEach((ans,i)=>{
+    const btn = document.createElement('button');
+    btn.innerText = ans;
+    btn.onclick = ()=>{answers.push(i);currentQuestion++;showQuestion();};
+    ansDiv.appendChild(btn);
+  });
+}
+
+function showResult(){
+  document.getElementById('quiz').classList.add('hidden');
+  document.getElementById('result').classList.remove('hidden');
+  const count = tally();
+  const map = mode==='male'?maleMap:femaleMap;
+
+  let bestChar = null;
+  let bestScore = -1;
+
+  for(const char in map){
+    let score = 0;
+    map[char].letters.forEach(l=>score += count[l]||0);
+    if(score>bestScore){bestScore=score;bestChar=char}
+  }
+
+  document.getElementById('characterName').innerText = bestChar;
+  document.getElementById('justification').innerText = map[bestChar].just;
+  document.getElementById('characterImg').src = map[bestChar].img;
+}
+</script>
+</body>
+</html>
